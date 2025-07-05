@@ -41,6 +41,7 @@ class APIService {
       return await response.json();
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error);
+      console.log('Falling back to mock data...');
       
       // Return mock data for development/demo purposes
       if (endpoint === '/metrics/recent') {
@@ -54,11 +55,21 @@ class APIService {
   }
 
   async getRecentMetrics(): Promise<SystemMetrics[]> {
-    return this.makeRequest<SystemMetrics[]>('/metrics/recent');
+    try {
+      return await this.makeRequest<SystemMetrics[]>('/metrics/recent');
+    } catch (error) {
+      console.log('Using mock metrics data');
+      return this.getMockMetrics();
+    }
   }
 
   async getAIDecisions(): Promise<AIDecision[]> {
-    return this.makeRequest<AIDecision[]>('/ai/decisions');
+    try {
+      return await this.makeRequest<AIDecision[]>('/ai/decisions');
+    } catch (error) {
+      console.log('Using mock AI decisions data');
+      return this.getMockDecisions();
+    }
   }
 
   async takeAction(action: string, target: string): Promise<{ success: boolean; message: string }> {
@@ -76,16 +87,16 @@ class APIService {
     for (let i = 0; i < 10; i++) {
       const timestamp = new Date(now.getTime() - i * 60000).toISOString();
       metrics.push({
-        cpu_usage: Math.random() * 100,
-        memory_usage: Math.random() * 100,
-        disk_usage: 45 + Math.random() * 30,
+        cpu_usage: 45 + Math.random() * 40, // 45-85%
+        memory_usage: 30 + Math.random() * 50, // 30-80%
+        disk_usage: 45 + Math.random() * 30, // 45-75%
         timestamp,
         top_processes: [
-          { name: 'nginx', cpu: Math.random() * 50, memory: Math.random() * 30 },
-          { name: 'postgres', cpu: Math.random() * 40, memory: Math.random() * 60 },
-          { name: 'redis', cpu: Math.random() * 20, memory: Math.random() * 25 },
-          { name: 'node', cpu: Math.random() * 70, memory: Math.random() * 45 },
-          { name: 'python', cpu: Math.random() * 35, memory: Math.random() * 40 },
+          { name: 'nginx', cpu: 15 + Math.random() * 35, memory: 10 + Math.random() * 20 },
+          { name: 'postgres', cpu: 8 + Math.random() * 25, memory: 25 + Math.random() * 35 },
+          { name: 'redis', cpu: 5 + Math.random() * 15, memory: 5 + Math.random() * 20 },
+          { name: 'node', cpu: 20 + Math.random() * 40, memory: 15 + Math.random() * 30 },
+          { name: 'python', cpu: 12 + Math.random() * 23, memory: 18 + Math.random() * 22 },
         ],
       });
     }
@@ -99,7 +110,7 @@ class APIService {
     const targets = ['nginx-container', 'postgres-db', 'web-server', 'api-gateway', 'cache-service'];
     const reasons = [
       'High CPU usage detected',
-      'Memory threshold exceeded',
+      'Memory threshold exceeded', 
       'Process not responding',
       'Load balancing required',
       'Resource optimization needed',
