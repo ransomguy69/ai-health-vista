@@ -1,23 +1,29 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { StatusBadge } from '@/components/StatusBadge';
-import { Cpu, HardDrive, MemoryStick, Activity } from 'lucide-react';
+import { StatusBadge } from './StatusBadge';
+import { Activity, Cpu, HardDrive, MemoryStick } from 'lucide-react';
+
+interface SystemMetrics {
+  cpu_usage: number;
+  memory_usage: number;
+  disk_usage: number;
+  timestamp: string;
+  top_processes: Array<{
+    name: string;
+    cpu: number;
+    memory: number;
+  }>;
+}
 
 interface SystemHealthProps {
-  metrics?: {
-    cpu_usage: number;
-    memory_usage: number;
-    disk_usage: number;
-    timestamp: string;
-  };
+  metrics?: SystemMetrics;
   status: 'healthy' | 'warning' | 'critical';
 }
 
 export const SystemHealth = ({ metrics, status }: SystemHealthProps) => {
   if (!metrics) {
     return (
-      <Card className="w-full">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
@@ -26,100 +32,104 @@ export const SystemHealth = ({ metrics, status }: SystemHealthProps) => {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-gray-500">
-            No data available
+            Loading system metrics...
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const getStatusColor = (usage: number) => {
-    if (usage > 80) return 'text-red-500';
-    if (usage > 60) return 'text-amber-500';
-    return 'text-green-500';
-  };
-
-  const getProgressColor = (usage: number) => {
-    if (usage > 80) return 'bg-red-500';
-    if (usage > 60) return 'bg-amber-500';
-    return 'bg-green-500';
-  };
-
   return (
-    <Card className="w-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Activity className="h-6 w-6 text-blue-600" />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
             System Health
-          </CardTitle>
-          <StatusBadge status={status} />
-        </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Last updated: {new Date(metrics.timestamp).toLocaleTimeString()}
-        </p>
+          </div>
+          <StatusBadge status={status} size="lg" />
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* CPU Usage */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-blue-500" />
-                <span className="font-medium text-sm">CPU</span>
-              </div>
-              <span className={`font-bold text-lg ${getStatusColor(metrics.cpu_usage)}`}>
-                {metrics.cpu_usage.toFixed(1)}%
-              </span>
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <Cpu className="h-8 w-8 text-blue-500" />
             </div>
-            <Progress 
-              value={metrics.cpu_usage} 
-              className="h-2"
-              style={{
-                background: `linear-gradient(to right, ${getProgressColor(metrics.cpu_usage)} ${metrics.cpu_usage}%, #e5e7eb ${metrics.cpu_usage}%)`
-              }}
-            />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">CPU Usage</p>
+              <div className="flex items-center space-x-2">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      metrics.cpu_usage > 80 ? 'bg-red-500' : 
+                      metrics.cpu_usage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min(metrics.cpu_usage, 100)}%` }}
+                  />
+                </div>
+                <span className="text-sm font-semibold">
+                  {metrics.cpu_usage.toFixed(1)}%
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Memory Usage */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MemoryStick className="h-4 w-4 text-purple-500" />
-                <span className="font-medium text-sm">Memory</span>
-              </div>
-              <span className={`font-bold text-lg ${getStatusColor(metrics.memory_usage)}`}>
-                {metrics.memory_usage.toFixed(1)}%
-              </span>
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <MemoryStick className="h-8 w-8 text-purple-500" />
             </div>
-            <Progress 
-              value={metrics.memory_usage} 
-              className="h-2"
-              style={{
-                background: `linear-gradient(to right, ${getProgressColor(metrics.memory_usage)} ${metrics.memory_usage}%, #e5e7eb ${metrics.memory_usage}%)`
-              }}
-            />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Memory Usage</p>
+              <div className="flex items-center space-x-2">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      metrics.memory_usage > 80 ? 'bg-red-500' : 
+                      metrics.memory_usage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min(metrics.memory_usage, 100)}%` }}
+                  />
+                </div>
+                <span className="text-sm font-semibold">
+                  {metrics.memory_usage.toFixed(1)}%
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Disk Usage */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <HardDrive className="h-4 w-4 text-orange-500" />
-                <span className="font-medium text-sm">Disk</span>
-              </div>
-              <span className={`font-bold text-lg ${getStatusColor(metrics.disk_usage)}`}>
-                {metrics.disk_usage.toFixed(1)}%
-              </span>
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <HardDrive className="h-8 w-8 text-orange-500" />
             </div>
-            <Progress 
-              value={metrics.disk_usage} 
-              className="h-2"
-              style={{
-                background: `linear-gradient(to right, ${getProgressColor(metrics.disk_usage)} ${metrics.disk_usage}%, #e5e7eb ${metrics.disk_usage}%)`
-              }}
-            />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Disk Usage</p>
+              <div className="flex items-center space-x-2">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      metrics.disk_usage > 85 ? 'bg-red-500' : 
+                      metrics.disk_usage > 70 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min(metrics.disk_usage, 100)}%` }}
+                  />
+                </div>
+                <span className="text-sm font-semibold">
+                  {metrics.disk_usage.toFixed(1)}%
+                </span>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* Last Updated */}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Last updated: {new Date(metrics.timestamp).toLocaleString()}
+          </p>
         </div>
       </CardContent>
     </Card>

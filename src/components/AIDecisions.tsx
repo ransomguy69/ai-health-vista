@@ -1,8 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Bot, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Brain, Clock, Target, AlertCircle } from 'lucide-react';
 
 interface AIDecision {
   id: string;
@@ -18,102 +17,74 @@ interface AIDecisionsProps {
 }
 
 export const AIDecisions = ({ decisions }: AIDecisionsProps) => {
-  const getStatusIcon = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'pending':
-        return <Clock className="h-4 w-4 text-amber-500" />;
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case 'failed':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default:
-        return <Clock className="h-4 w-4" />;
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <Badge className="bg-green-500 hover:bg-green-600">Success</Badge>;
-      case 'pending':
-        return <Badge className="bg-amber-500 hover:bg-amber-600">Pending</Badge>;
-      case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
+  const getActionIcon = (action: string) => {
+    if (action.toLowerCase().includes('kill') || action.toLowerCase().includes('restart')) {
+      return <AlertCircle className="h-4 w-4" />;
     }
-  };
-
-  const getActionColor = (action: string) => {
-    const lowerAction = action.toLowerCase();
-    if (lowerAction.includes('kill') || lowerAction.includes('stop')) {
-      return 'text-red-600';
-    }
-    if (lowerAction.includes('restart') || lowerAction.includes('scale')) {
-      return 'text-amber-600';
-    }
-    return 'text-blue-600';
-  };
-
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
+    return <Target className="h-4 w-4" />;
   };
 
   return (
-    <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm h-fit">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-indigo-600" />
-          AI Agent Decisions
+          <Brain className="h-5 w-5" />
+          AI Decisions
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {decisions.length === 0 ? (
+      <CardContent>
+        {!decisions || decisions.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <Bot className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-            <p>No AI decisions yet</p>
+            No AI decisions recorded yet
           </div>
         ) : (
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {decisions.map((decision, index) => (
-              <div key={decision.id}>
-                <div className="space-y-3">
-                  {/* Header with status */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(decision.status)}
-                      <span className={`font-semibold ${getActionColor(decision.action)}`}>
-                        {decision.action}
-                      </span>
-                    </div>
-                    {getStatusBadge(decision.status)}
+          <div className="space-y-4">
+            {decisions.slice(0, 6).map((decision) => (
+              <div 
+                key={decision.id}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {getActionIcon(decision.action)}
+                    <h4 className="font-medium text-sm">{decision.action}</h4>
                   </div>
-
-                  {/* Target */}
-                  <div className="text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Target: </span>
-                    <code className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-xs font-mono">
+                  <Badge className={getStatusColor(decision.status)}>
+                    {decision.status}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Target className="h-3 w-3" />
+                    <span className="font-medium">Target:</span>
+                    <span className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                       {decision.target}
-                    </code>
-                  </div>
-
-                  {/* Reason */}
-                  <div className="text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Reason: </span>
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {decision.reason}
                     </span>
                   </div>
-
-                  {/* Timestamp */}
-                  <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                    {formatTime(decision.timestamp)}
+                  
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="font-medium">Reason:</span> {decision.reason}
+                  </p>
+                  
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <Clock className="h-3 w-3" />
+                    {new Date(decision.timestamp).toLocaleString()}
                   </div>
                 </div>
-
-                {index < decisions.length - 1 && (
-                  <Separator className="my-4" />
-                )}
               </div>
             ))}
           </div>
